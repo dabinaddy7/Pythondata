@@ -124,3 +124,140 @@ sns.barplot(data = df, x = 'pclass', y = 'survived', hue = 'sex')
 plt.title('Survival Rate by Pclass and Sex (Seaborn)')
 plt.show()
 # %%
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(10,5))
+
+sns.histplot(data = df, x = 'age', hue = 'survived',
+            multiple = 'stack', kde = True, palette = 'Set2')
+plt.title('Age Distribution by Survival Status')
+plt.xlabel('Age')
+plt.ylabel('Passenger Count')
+plt.show()
+# %%
+# %% [2] 결측치(NaN) 확인하고 중간값으로 채우기
+
+# 1. 현재 나이 컬럼에 비어있는 값(결측치)이 몇 개인지 확인
+print("채우기 전 비어있는 나이 데이터 개수:", df['age'].isnull().sum())
+
+# 2. 승객들의 나이 중간값(Median) 구하기
+median_age = df['age'].median()
+print(f"승객들의 나이 중간값: {median_age}세")
+
+# 3. 비어있는 값(.fillna)을 중간값으로 채워 넣기
+df['age'] = df['age'].fillna(median_age)
+
+# 4. 잘 채워졌는지 다시 확인
+print("채운 후 비어있는 나이 데이터 개수:", df['age'].isnull().sum())
+# %%
+
+plt.figure(figsize=(10,5))
+
+sns.histplot(data = df, x = 'age', hue = 'survived',
+            multiple = 'stack', kde = True, palette = 'Set2')
+plt.title('Age Distribution by Survival Status')
+plt.xlabel('Age')
+plt.ylabel('Passenger Count')
+plt.show()
+# %%
+# %% [3] 나이 구간(Age Group) 나누고 시각화하기
+
+# 나이를 나눌 기준점(bins)과 각 구간의 이름(labels) 정하기
+bins = [0, 5, 19, 35, 60, 100]
+labels = ['Baby', 'Teenager', 'Young Adult', 'Middle Aged', 'Senior']
+
+# pd.cut을 이용해 'age_group'이라는 새로운 컬럼 만들기
+df['age_group'] = pd.cut(df['age'], bins=bins, labels=labels)
+
+# 새로 만든 연령대 그룹별로 생존율 시각화하기!
+plt.figure(figsize=(8, 5))
+sns.barplot(data=df, x='age_group', y='survived', palette='muted')
+
+plt.title('Survival Rate by Age Group')
+plt.xlabel('Age Group')
+plt.ylabel('Survival Rate')
+plt.show()
+# %%
+# %% [4] 등급별, 성별 중간값으로 스마트하게 나이 채우기
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# 1. 원본 데이터 다시 불러오기 (이전의 왜곡된 데이터 초기화)
+df = pd.read_excel('titanic.xls')
+
+# 2. 각 그룹(pclass, sex)별 나이 중간값 확인해보기
+# 1등석 남성(42세)과 3등석 여성(22세)의 차이가 엄청납니다!
+medians = df.groupby(['pclass', 'sex'])['age'].transform('median')
+
+# 3. 비어있는(NaN) 나이만 쏙 골라 해당 그룹의 중간값으로 정교하게 매칭하여 채우기
+df['age'] = df['age'].fillna(medians)
+
+# 4. 스마트하게 채운 뒤 나이 분포 다시 그려보기!
+plt.figure(figsize=(10, 5))
+sns.histplot(data=df, x='age', hue='survived', multiple='stack', kde=True, palette='Set2')
+plt.title('Age Distribution (Smart Imputation by Pclass & Sex)')
+plt.show()
+# %%
+# %% [5] 결측치를 채우지 않고 'Unknown' 카테고리로 다루기
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# 1. 원본 데이터 다시 깨끗하게 불러오기
+df = pd.read_excel('titanic.xls')
+
+# 2. 나이대를 자르되, 결측치(NaN)는 그대로 둡니다.
+bins = [0, 5, 19, 35, 60, 100]
+labels = ['Baby', 'Teenager', 'Young Adult', 'Middle Aged', 'Senior']
+df['age_group'] = pd.cut(df['age'], bins=bins, labels=labels)
+
+# 3. 판다스 카테고리 데이터에 'Unknown'이라는 방을 하나 더 만들어주고, 빈 곳을 채웁니다.
+df['age_group'] = df['age_group'].cat.add_categories('Unknown')
+df['age_group'] = df['age_group'].fillna('Unknown')
+
+# 4. 시각화 해보기 (순서는 보기 좋게 정렬)
+plt.figure(figsize=(9, 5))
+group_order = ['Baby', 'Teenager', 'Young Adult', 'Middle Aged', 'Senior', 'Unknown']
+sns.barplot(data=df, x='age_group', y='survived', order=group_order, palette='Set2')
+
+plt.title('Survival Rate by Age Group (Including Unknown)')
+plt.xlabel('Age Group')
+plt.ylabel('Survival Rate')
+plt.show()
+# %%
+df['fare'].describe()
+# %%
+sns.histplot(df, x = 'fare', kde = True)
+plt.show()
+# %%
+df['fare_group'] = pd.qcut(df['fare'], q=3, labels= ['Low', 'Medium', 'High'])
+sns.barplot(data=df, x = 'fare_group', y = 'survived')
+plt.show()
+# %%
+%pip install statsmodels
+# 요금이 올라갈수록 생존 확률(로지스틱 곡선)이 어떻게 변하는지 쪼개지 않고 그대로 보기
+sns.lmplot(data=df, x='fare', y='survived', logistic=True, y_jitter=0.03)
+# %%
+# 역사적 기준이나 요금 분포의 명확한 절단면을 직접 숫자로 지정하기
+# 0~15달러(서민형), 15~40달러(중산층), 40~512달러(자산가)
+custom_bins = [0, 15, 40, 512]
+df['fare_group_custom'] = pd.cut(df['fare'], bins=custom_bins, labels=['Low', 'Medium', 'High'])
+# %%
+sns.histplot(data=df, x='fare_group_custom', hue='survived', multiple='stack', palette='Set2')
+# %%
+# %% [7] 범주형 데이터에 맞게 kde를 빼고 깔끔한 스택 막대그래프로 보기
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(8, 5))
+
+# kde=True만 쏙 뺐습니다!
+sns.histplot(data=df, x='fare_group_custom', hue='survived', multiple='stack', palette='Set2')
+
+plt.title('Passenger Count by Custom Fare Group and Survival')
+plt.xlabel('Custom Fare Group')
+plt.ylabel('Passenger Count')
+plt.show()
+# %%
