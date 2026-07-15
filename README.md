@@ -35,3 +35,8 @@
 * Pandas (Data Manipulation)
 * Seaborn & Matplotlib (Data Visualization)
 * Statsmodels (Statistical Regression)
+
+## 📅 TIL (Today I Learned)
+매일매일 분석하고 배운 알짜배기 지식들을 기록하는 공간입니다.
+
+* 📝 **[나의 일일 분석 일지(TIL) 보러가기](./TIL)**
